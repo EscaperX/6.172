@@ -5,6 +5,8 @@ The homework is done on a cloud server, because perf can't work normally on WSL.
 Checkoff item 1
 ===============
 
+There's no hardware support on WSL2. So I just skip this item.
+
 Checkoff item 2
 ===============
 
@@ -43,143 +45,368 @@ Done. Value = 938895920
 ==8389== Mispred rate:            0.0% (        0.0%     +         0.0%   )
 ~~~
 
+
+
 Valgrind result on my WSL:
 ~~~
-==12895== Cachegrind, a cache and branch-prediction profiler
-==12895== Copyright (C) 2002-2017, and GNU GPL'd, by Nicholas Nethercote et al.
-==12895== Using Valgrind-3.15.0 and LibVEX; rerun with -h for copyright info
-==12895== Command: ./sum
-==12895==
---12895-- warning: L3 cache found, using its data for the LL simulation.
---12895-- warning: specified LL cache: line_size 64  assoc 10  total_size 26,214,400
---12895-- warning: simulated LL cache: line_size 64  assoc 13  total_size 27,262,976
 Allocated array of size 10000000
 Summing 100000000 random values...
 Done. Value = 938895920
-==12895==
-==12895== I   refs:      3,540,234,109
-==12895== I1  misses:            1,217
-==12895== LLi misses:            1,200
-==12895== I1  miss rate:          0.00%
-==12895== LLi miss rate:          0.00%
-==12895==
-==12895== D   refs:        610,071,882  (400,055,008 rd   + 210,016,874 wr)
-==12895== D1  misses:      100,507,402  ( 99,881,533 rd   +     625,869 wr)
-==12895== LLd misses:       32,616,757  ( 31,990,944 rd   +     625,813 wr)
-==12895== D1  miss rate:          16.5% (       25.0%     +         0.3%  )
-==12895== LLd miss rate:           5.3% (        8.0%     +         0.3%  )
-==12895==
-==12895== LL refs:         100,508,619  ( 99,882,750 rd   +     625,869 wr)
-==12895== LL misses:        32,617,957  ( 31,992,144 rd   +     625,813 wr)
-==12895== LL miss rate:            0.8% (        0.8%     +         0.3%  )
-==12895==
-==12895== Branches:        210,044,247  (110,043,716 cond + 100,000,531 ind)
-==12895== Mispredicts:           5,364  (      5,140 cond +         224 ind)
-==12895== Mispred rate:            0.0% (        0.0%     +         0.0%   )
+==14717==
+==14717== I refs: 3,440,157,604
+==14717== I1 misses: 1,361
+==14717== LLi misses: 1,354
+==14717== I1 miss rate: 0.00%
+==14717== LLi miss rate: 0.00%
+==14717==
+==14717== D refs: 610,051,276 (400,036,915 rd + 210,014,361 wr)
+==14717== D1 misses: 100,506,123 ( 99,880,435 rd + 625,688 wr)
+==14717== LLd misses: 37,858,820 ( 37,233,165 rd + 625,655 wr)
+==14717== D1 miss rate: 16.5% ( 25.0% + 0.3% )
+==14717== LLd miss rate: 6.2% ( 9.3% + 0.3% )
+==14717==
+==14717== LL refs: 100,507,484 ( 99,881,796 rd + 625,688 wr)
+==14717== LL misses: 37,860,174 ( 37,234,519 rd + 625,655 wr)
+==14717== LL miss rate: 0.9% ( 1.0% + 0.3% )
+==14717==
+==14717== Branches: 210,028,248 (110,027,861 cond + 100,000,387 ind)
+==14717== Mispredicts: 3,497 ( 3,322 cond + 175 ind)
+==14717== Mispred rate: 0.0% ( 0.0% + 0.0% )
 ~~~
+
+When set `U = 1`, we have
+~~~
+Allocated array of size 1
+Summing 100000000 random values...
+Done. Value = 0
+==14343==
+==14343== I refs: 2,400,155,667
+==14343== I1 misses: 1,343
+==14343== LLi misses: 1,323
+==14343== I1 miss rate: 0.00%
+==14343== LLi miss rate: 0.00%
+==14343==
+==14343== D refs: 500,050,314 (300,036,283 rd + 200,014,031 wr)
+==14343== D1 misses: 2,166 ( 1,542 rd + 624 wr)
+==14343== LLd misses: 1,914 ( 1,324 rd + 590 wr)
+==14343== D1 miss rate: 0.0% ( 0.0% + 0.0% )
+==14343== LLd miss rate: 0.0% ( 0.0% + 0.0% )
+==14343==
+==14343== LL refs: 3,509 ( 2,885 rd + 624 wr)
+==14343== LL misses: 3,237 ( 2,647 rd + 590 wr)
+==14343== LL miss rate: 0.0% ( 0.0% + 0.0% )
+==14343==
+==14343== Branches: 200,027,986 (100,027,606 cond + 100,000,380 ind)
+==14343== Mispredicts: 3,481 ( 3,311 cond + 170 ind)
+==14343== Mispred rate: 0.0% ( 0.0% + 0.0% )
+~~~
+
+Notice that the data referece reduces 100 million read and 10 million write-back, which means for every random access with U = 10 million it needs cache reset.
+D1 misses also show that.
+
+200 million write-backs correspond to assignment of generated position and addition of val.
 
 Write-up 1
 ==========
-test command: valgrind --tool=cachegrind --branch-sim=yes ./sort 100 10
+test command: valgrind --tool=cachegrind --branch-sim=yes ./sort 1000000 10
 
 Make with O3:
 ~~~
-==8421==
-==8421== I   refs:      2,315,009
-==8421== I1  misses:        1,579
-==8421== LLi misses:        1,468
-==8421== I1  miss rate:      0.07%
-==8421== LLi miss rate:      0.06%
-==8421==
-==8421== D   refs:        859,572  (531,084 rd   + 328,488 wr)
-==8421== D1  misses:        4,292  (  3,370 rd   +     922 wr)
-==8421== LLd misses:        3,230  (  2,417 rd   +     813 wr)
-==8421== D1  miss rate:       0.5% (    0.6%     +     0.3%  )
-==8421== LLd miss rate:       0.4% (    0.5%     +     0.2%  )
-==8421==
-==8421== LL refs:           5,871  (  4,949 rd   +     922 wr)
-==8421== LL misses:         4,698  (  3,885 rd   +     813 wr)
-==8421== LL miss rate:        0.1% (    0.1%     +     0.2%  )
-==8421==
-==8421== Branches:        394,060  (376,109 cond +  17,951 ind)
-==8421== Mispredicts:      25,145  ( 24,789 cond +     356 ind)
-==8421== Mispred rate:        6.4% (    6.6%     +     2.0%   )
+Running test #0...
+Generating random array of 1000000 elements
+Arrays are sorted: yes
+--> test_correctness at line 217: PASS
+sort_i : Elapsed execution time: 1.523800 sec
+Generating inverted array of 1000000 elements
+Arrays are sorted: yes
+--> test_correctness at line 217: PASS
+sort_i : Elapsed execution time: 3.041070 sec
+
+Running test #1...
+--> test_zero_element at line 245: PASS
+
+Running test #2...
+--> test_one_element at line 266: PASS
+Done testing.
+==1593==
+==1593== I refs: 14,971,189,443
+==1593== I1 misses: 1,758
+==1593== LLi misses: 1,656
+==1593== I1 miss rate: 0.00%
+==1593== LLi miss rate: 0.00%
+==1593==
+==1593== D refs: 5,256,474,761 (3,194,488,782 rd + 2,061,985,979 wr)
+==1593== D1 misses: 47,912,905 ( 24,439,689 rd + 23,473,216 wr)
+==1593== LLd misses: 252,297 ( 1,531 rd + 250,766 wr)
+==1593== D1 miss rate: 0.9% ( 0.8% + 1.1% )
+==1593== LLd miss rate: 0.0% ( 0.0% + 0.0% )
+==1593==
+==1593== LL refs: 47,914,663 ( 24,441,447 rd + 23,473,216 wr)
+==1593== LL misses: 253,953 ( 3,187 rd + 250,766 wr)
+==1593== LL miss rate: 0.0% ( 0.0% + 0.0% )
+==1593==
+==1593== Branches: 1,528,020,286 (1,438,019,610 cond + 90,000,676 ind)
+==1593== Mispredicts: 49,477,340 ( 49,477,035 cond + 305 ind)
+==1593== Mispred rate: 3.2% ( 3.4% + 0.0% )
 ~~~
 
 Make with DEBUG=1
 ~~~
-==8440==
-==8440== I   refs:      3,355,991
-==8440== I1  misses:        1,539
-==8440== LLi misses:        1,451
-==8440== I1  miss rate:      0.05%
-==8440== LLi miss rate:      0.04%
-==8440==
-==8440== D   refs:      1,953,161  (1,402,482 rd   + 550,679 wr)
-==8440== D1  misses:        4,264  (    3,341 rd   +     923 wr)
-==8440== LLd misses:        3,221  (    2,408 rd   +     813 wr)
-==8440== D1  miss rate:       0.2% (      0.2%     +     0.2%  )
-==8440== LLd miss rate:       0.2% (      0.2%     +     0.1%  )
-==8440==
-==8440== LL refs:           5,803  (    4,880 rd   +     923 wr)
-==8440== LL misses:         4,672  (    3,859 rd   +     813 wr)
-==8440== LL miss rate:        0.1% (      0.1%     +     0.1%  )
-==8440==
-==8440== Branches:        422,541  (  404,646 cond +  17,895 ind)
-==8440== Mispredicts:      31,459  (   31,129 cond +     330 ind)
-==8440== Mispred rate:        7.4% (      7.7%     +     1.8%   )
-~~~
-
-Write-up 2
-==========
-Test command: time valgrind --tool=cachegrind --branch-sim=yes ./sort 10000 10
-
-
-No Inline and sort_i only:
-~~~
-==9247==
-==9247== I   refs:      308,789,072
-==9247== I1  misses:          1,578
-==9247== LLi misses:          1,467
-==9247== I1  miss rate:        0.00%
-==9247== LLi miss rate:        0.00%
-==9247==
-==9247== D   refs:      200,440,636  (151,499,890 rd   + 48,940,746 wr)
-==9247== D1  misses:        463,667  (    236,406 rd   +    227,261 wr)
-==9247== LLd misses:         36,038  (      2,414 rd   +     33,624 wr)
-==9247== D1  miss rate:         0.2% (        0.2%     +        0.5%  )
-==9247== LLd miss rate:         0.0% (        0.0%     +        0.1%  )
-==9247==
-==9247== LL refs:           465,245  (    237,984 rd   +    227,261 wr)
-==9247== LL misses:          37,505  (      3,881 rd   +     33,624 wr)
-==9247== LL miss rate:          0.0% (        0.0%     +        0.1%  )
-==9247==
-==9247== Branches:       32,860,221  ( 31,679,780 cond +  1,180,441 ind)
-==9247== Mispredicts:     2,389,528  (  2,389,200 cond +        328 ind)
-==9247== Mispred rate:          7.3% (        7.5%     +        0.0%   )
-./sort 262144 2
-
 Running test #0...
-Generating random array of 262144 elements
+Generating random array of 1000000 elements
 Arrays are sorted: yes
- --> test_correctness at line 217: PASS
-sort_i          : Elapsed execution time: 0.072631 sec
-Generating inverted array of 262144 elements
+--> test_correctness at line 217: PASS
+sort_i : Elapsed execution time: 2.974335 sec
+Generating inverted array of 1000000 elements
 Arrays are sorted: yes
- --> test_correctness at line 217: PASS
-sort_i          : Elapsed execution time: 0.116887 sec
+--> test_correctness at line 217: PASS
+sort_i : Elapsed execution time: 5.840608 sec
 
 Running test #1...
- --> test_zero_element at line 245: PASS
+--> test_zero_element at line 245: PASS
 
 Running test #2...
- --> test_one_element at line 266: PASS
+--> test_one_element at line 266: PASS
 Done testing.
-
-real    0m2.807s
-user    0m2.576s
-sys     0m0.098s
+==31580==
+==31580== I refs: 26,222,324,988
+==31580== I1 misses: 1,696
+==31580== LLi misses: 1,613
+==31580== I1 miss rate: 0.00%
+==31580== LLi miss rate: 0.00%
+==31580==
+==31580== D refs: 17,397,965,895 (13,160,741,218 rd + 4,237,224,677 wr)
+==31580== D1 misses: 47,847,429 ( 24,407,328 rd + 23,440,101 wr)
+==31580== LLd misses: 252,272 ( 1,507 rd + 250,765 wr)
+==31580== D1 miss rate: 0.3% ( 0.2% + 0.6% )
+==31580== LLd miss rate: 0.0% ( 0.0% + 0.0% )
+==31580==
+==31580== LL refs: 47,849,125 ( 24,409,024 rd + 23,440,101 wr)
+==31580== LL misses: 253,885 ( 3,120 rd + 250,765 wr)
+==31580== LL miss rate: 0.0% ( 0.0% + 0.0% )
+==31580==
+==31580== Branches: 2,520,125,276 ( 2,430,124,628 cond + 90,000,648 ind)
+==31580== Mispredicts: 200,872,145 ( 200,871,853 cond + 292 ind)
+==31580== Mispred rate: 8.0% ( 8.3% + 0.0% )
 ~~~
 
+Write-up 2 & 3
+==========
+
+-O3 seems inline those functions automatically.
+
+~~~
+Running test #0...
+Generating random array of 131072 elements
+Arrays are sorted: yes
+--> test_correctness at line 217: PASS
+sort_a : Elapsed execution time: 0.185519 sec
+Generating inverted array of 131072 elements
+Arrays are sorted: yes
+--> test_correctness at line 217: PASS
+sort_a : Elapsed execution time: 0.365207 sec
+
+Running test #1...
+--> test_zero_element at line 245: PASS
+
+Running test #2...
+--> test_one_element at line 266: PASS
+Done testing.
+==30489==
+==30489== I refs: 185,528,120
+==30489== I1 misses: 1,767
+==30489== LLi misses: 1,663
+==30489== I1 miss rate: 0.00%
+==30489== LLi miss rate: 0.00%
+==30489==
+==30489== D refs: 67,866,540 (40,950,691 rd + 26,915,849 wr)
+==30489== D1 misses: 438,874 ( 226,629 rd + 212,245 wr)
+==30489== LLd misses: 35,027 ( 1,538 rd + 33,489 wr)
+==30489== D1 miss rate: 0.6% ( 0.6% + 0.8% )
+==30489== LLd miss rate: 0.1% ( 0.0% + 0.1% )
+==30489==
+==30489== LL refs: 440,641 ( 228,396 rd + 212,245 wr)
+==30489== LL misses: 36,690 ( 3,201 rd + 33,489 wr)
+==30489== LL miss rate: 0.0% ( 0.0% + 0.1% )
+==30489==
+==30489== Branches: 20,505,753 (19,325,447 cond + 1,180,306 ind)
+==30489== Mispredicts: 619,176 ( 618,871 cond + 305 ind)
+==30489== Mispred rate: 3.0% ( 3.2% + 0.0% )
+~~~
+
+Write-up 4
+===
+
+It's slower?... What did I miss.
+
+~~~
+==25842==
+==25842== I refs: 163,228,837
+==25842== I1 misses: 1,774
+==25842== LLi misses: 1,659
+==25842== I1 miss rate: 0.00%
+==25842== LLi miss rate: 0.00%
+==25842==
+==25842== D refs: 71,405,488 (40,033,193 rd + 31,372,295 wr)
+==25842== D1 misses: 439,096 ( 226,605 rd + 212,491 wr)
+==25842== LLd misses: 35,027 ( 1,538 rd + 33,489 wr)
+==25842== D1 miss rate: 0.6% ( 0.6% + 0.7% )
+==25842== LLd miss rate: 0.0% ( 0.0% + 0.1% )
+==25842==
+==25842== LL refs: 440,870 ( 228,379 rd + 212,491 wr)
+==25842== LL misses: 36,686 ( 3,197 rd + 33,489 wr)
+==25842== LL miss rate: 0.0% ( 0.0% + 0.1% )
+==25842==
+==25842== Branches: 24,962,195 (23,781,889 cond + 1,180,306 ind)
+==25842== Mispredicts: 1,779,535 ( 1,779,230 cond + 305 ind)
+==25842== Mispred rate: 7.1% ( 7.5% + 0.0% )
+~~~
+
+Less Instruction references but more data references and worse branch prediction.
+Because it can reduce one time of increment for id.
+
+It's surprising that sorting with pointer has double mispredict rate. 
+Read the assembly code I found that clang uses `cmova` to avoid explicit jump instructions.
+
+![Figure [pointer]: Assembly code of pointer version](./figure/pointer.png)
+
+![Figure [array]: Assembly code of array version](./figure/array.png)
+
+
+But why such optimization can't apply on pointer version? Maybe clang is too cautious to optimize 
+any operations on raw pointers.
+
+Write-up 5
+===
+
+~~~
+Running test #0...
+Generating random array of 131072 elements
+Arrays are sorted: yes
+--> test_correctness at line 217: PASS
+sort_c : Elapsed execution time: 0.091536 sec
+Generating inverted array of 131072 elements
+Arrays are sorted: yes
+--> test_correctness at line 217: PASS
+sort_c : Elapsed execution time: 0.178193 sec
+
+Running test #1...
+--> test_zero_element at line 245: PASS
+
+Running test #2...
+--> test_one_element at line 266: PASS
+Done testing.
+==11244==
+==11244== I refs: 101,722,597
+==11244== I1 misses: 1,785
+==11244== LLi misses: 1,673
+==11244== I1 miss rate: 0.00%
+==11244== LLi miss rate: 0.00%
+==11244==
+==11244== D refs: 32,011,613 (18,824,653 rd + 13,186,960 wr)
+==11244== D1 misses: 438,576 ( 226,576 rd + 212,000 wr)
+==11244== LLd misses: 35,027 ( 1,539 rd + 33,488 wr)
+==11244== D1 miss rate: 1.4% ( 1.2% + 1.6% )
+==11244== LLd miss rate: 0.1% ( 0.0% + 0.3% )
+==11244==
+==11244== LL refs: 440,361 ( 228,361 rd + 212,000 wr)
+==11244== LL misses: 36,700 ( 3,212 rd + 33,488 wr)
+==11244== LL miss rate: 0.0% ( 0.0% + 0.3% )
+==11244==
+==11244== Branches: 9,587,266 ( 9,324,464 cond + 262,802 ind)
+==11244== Mispredicts: 583,899 ( 583,594 cond + 305 ind)
+==11244== Mispred rate: 6.1% ( 6.3% + 0.1% )
+~~~
+
+The running time reduces 50%. And data references decreased a lot.
+
+The threshold is 8, when increase the threshold, the data references will further reduce, but 
+mispred rate will increase.
+
+Write-up 6
+===
+
+~~~
+Running test #0...
+Generating random array of 131072 elements
+Arrays are sorted: yes
+--> test_correctness at line 217: PASS
+sort_m : Elapsed execution time: 0.088133 sec
+Generating inverted array of 131072 elements
+Arrays are sorted: yes
+--> test_correctness at line 217: PASS
+sort_m : Elapsed execution time: 0.173530 sec
+
+Running test #1...
+--> test_zero_element at line 245: PASS
+
+Running test #2...
+--> test_one_element at line 266: PASS
+Done testing.
+==20810==
+==20810== I refs: 113,793,862
+==20810== I1 misses: 1,750
+==20810== LLi misses: 1,661
+==20810== I1 miss rate: 0.00%
+==20810== LLi miss rate: 0.00%
+==20810==
+==20810== D refs: 28,897,246 (16,740,146 rd + 12,157,100 wr)
+==20810== D1 misses: 318,720 ( 171,476 rd + 147,244 wr)
+==20810== LLd misses: 26,800 ( 1,539 rd + 25,261 wr)
+==20810== D1 miss rate: 1.1% ( 1.0% + 1.2% )
+==20810== LLd miss rate: 0.1% ( 0.0% + 0.2% )
+==20810==
+==20810== LL refs: 320,470 ( 173,226 rd + 147,244 wr)
+==20810== LL misses: 28,461 ( 3,200 rd + 25,261 wr)
+==20810== LL miss rate: 0.0% ( 0.0% + 0.2% )
+==20810==
+==20810== Branches: 10,304,660 (10,107,390 cond + 197,270 ind)
+==20810== Mispredicts: 543,596 ( 543,291 cond + 305 ind)
+==20810== Mispred rate: 5.3% ( 5.4% + 0.2% )
+~~~
+
+Lower data references and lower mispred rate.
+
+Write-up 7
+===
+
+~~~
+Running test #0...
+Generating random array of 131072 elements
+Arrays are sorted: yes
+--> test_correctness at line 217: PASS
+sort_f : Elapsed execution time: 0.078258 sec
+Generating inverted array of 131072 elements
+Arrays are sorted: yes
+--> test_correctness at line 217: PASS
+sort_f : Elapsed execution time: 0.155050 sec
+
+Running test #1...
+--> test_zero_element at line 245: PASS
+
+Running test #2...
+--> test_one_element at line 266: PASS
+Done testing.
+==25428==
+==25428== I refs: 108,647,017
+==25428== I1 misses: 1,751
+==25428== LLi misses: 1,657
+==25428== I1 miss rate: 0.00%
+==25428== LLi miss rate: 0.00%
+==25428==
+==25428== D refs: 26,376,586 (15,214,450 rd + 11,162,136 wr)
+==25428== D1 misses: 312,955 ( 167,233 rd + 145,722 wr)
+==25428== LLd misses: 26,768 ( 1,538 rd + 25,230 wr)
+==25428== D1 miss rate: 1.2% ( 1.1% + 1.3% )
+==25428== LLd miss rate: 0.1% ( 0.0% + 0.2% )
+==25428==
+==25428== LL refs: 314,706 ( 168,984 rd + 145,722 wr)
+==25428== LL misses: 28,425 ( 3,195 rd + 25,230 wr)
+==25428== LL miss rate: 0.0% ( 0.0% + 0.2% )
+==25428==
+==25428== Branches: 9,533,183 ( 9,401,437 cond + 131,746 ind)
+==25428== Mispredicts: 534,175 ( 533,870 cond + 305 ind)
+==25428== Mispred rate: 5.6% ( 5.7% + 0.2% )
+~~~
 
 <!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script src="markdeep.min.js" charset="utf-8"></script><script src="https://morgan3d.github.io/markdeep/latest/markdeep.min.js" charset="utf-8"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>

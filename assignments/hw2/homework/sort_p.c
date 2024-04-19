@@ -20,10 +20,87 @@
  * IN THE SOFTWARE.
  **/
 
-
 #include "./util.h"
 
-void sort_p(data_t* A, int p, int r) {
-  printf("Unimplemented!\n");
+// Function prototypes
+static void merge_p(data_t *A, int p, int q, int r);
+static void copy_p(data_t *source, data_t *dest, int n);
+
+// A basic merge sort routine that sorts the subarray A[p..r]
+void sort_p(data_t *A, int p, int r)
+{
+  assert(A);
+  if (p < r)
+  {
+    int q = (p + r) / 2;
+    sort_p(A, p, q);
+    sort_p(A, q + 1, r);
+    merge_p(A, p, q, r);
+  }
 }
 
+// A merge routine. Merges the sub-arrays A [p..q] and A [q + 1..r].
+// Uses two arrays 'left' and 'right' in the merge operation.
+inline static void merge_p(data_t *A, int p, int q, int r)
+{
+  assert(A);
+  assert(p <= q);
+  assert((q + 1) <= r);
+  int n1 = q - p + 1;
+  int n2 = r - q;
+
+  data_t *left = 0, *right = 0;
+  mem_alloc(&left, n1 + 1);
+  mem_alloc(&right, n2 + 1);
+  if (left == NULL || right == NULL)
+  {
+    mem_free(&left);
+    mem_free(&right);
+    return;
+  }
+
+  // copy_p(&(A[p]), left, n1);
+  copy_p((A + p), left, n1);
+  // copy_p(&(A[q + 1]), right, n2);
+  copy_p((A + q + 1), right, n2);
+  // left[n1] = UINT_MAX;
+  *(left + n1) = UINT_MAX;
+  // right[n2] = UINT_MAX;
+  *(right + n2) = UINT_MAX;
+
+  // int i = 0;
+  // int j = 0;
+  data_t* left_back = left;
+  data_t* right_back = right;
+  data_t* A_it = A + p;
+  for (int k = p; k <= r; k++)
+  {
+    // if (left[i] <= right[j]) {
+    if (*left <= *right)
+    {
+      // A[k] = left[i];
+      *(A_it) = *left;
+      left++; // i++;
+    }
+    else
+    {
+      // A[k] = right[j];
+      *(A_it) = *right;
+      right++; // j++;
+    }
+    A_it++;
+  }
+  mem_free(&left_back);
+  mem_free(&right_back);
+}
+
+static void copy_p(data_t *source, data_t *dest, int n)
+{
+  assert(dest);
+  assert(source);
+
+  for (int i = 0; i < n; i++)
+  {
+    *(dest + i) = *(source + i);
+  }
+}

@@ -40,7 +40,7 @@ void sort_i(data_t* A, int p, int r) {
 
 // A merge routine. Merges the sub-arrays A [p..q] and A [q + 1..r].
 // Uses two arrays 'left' and 'right' in the merge operation.
-static void merge_i(data_t* A, int p, int q, int r) {
+inline static void merge_i(data_t* A, int p, int q, int r) {
   assert(A);
   assert(p <= q);
   assert((q + 1) <= r);
@@ -77,7 +77,7 @@ static void merge_i(data_t* A, int p, int q, int r) {
   mem_free(&right);
 }
 
-static void copy_i(data_t* source, data_t* dest, int n) {
+inline static void copy_i(data_t* source, data_t* dest, int n) {
   assert(dest);
   assert(source);
 

@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 typedef uint32_t data_t;
-const int U = 10000000;   // size of the array. 10 million vals ~= 40MB
+const int U = 1;   // size of the array. 10 million vals ~= 40MB
 const int N = 100000000;  // number of searches to perform
 
 int main() {
